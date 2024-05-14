@@ -2,13 +2,17 @@ package com.aluracursos.screenmach;
 
 import com.aluracursos.screenmach.Principal.EjemploStreams;
 import com.aluracursos.screenmach.Principal.Principal;
+import com.aluracursos.screenmach.repository.ISerieRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+
 @SpringBootApplication
 public class ScreenmachApplication implements CommandLineRunner {
-
+    @Autowired
+    private ISerieRepository serieRepository;
 	public static void main(String[] args) {
 		SpringApplication.run(ScreenmachApplication.class, args);
 	}
@@ -30,14 +34,13 @@ public class ScreenmachApplication implements CommandLineRunner {
 
         System.out.println(episodio);*/
 
-        Principal menuPrincipal = new Principal();
+        Principal menuPrincipal = new Principal(serieRepository);
 
-        menuPrincipal.mostrarMenu();
+        //menuPrincipal.mostrarMenu();
+		menuPrincipal.mostrarMenuPrincipal();
 
 		//EjemploStreams ejemplo = new EjemploStreams();
 		//jemplo.mostrarEjemplo();
-
-
 
     }
 }

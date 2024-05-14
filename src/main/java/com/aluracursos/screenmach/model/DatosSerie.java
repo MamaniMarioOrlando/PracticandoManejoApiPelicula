@@ -9,5 +9,11 @@ public record DatosSerie(
         //la notacion @Jsonproperyti sirve para lectura y escritura
         @JsonAlias("Title") String titulo,
         @JsonAlias("totalSeasons") Integer totalDeTemporadas,
-        @JsonAlias("imdbRating") String evaluacion) {
+        @JsonAlias("imdbRating") String evaluacion,
+        @JsonAlias("Actors") String actores,
+        @JsonAlias("Genre") String genero,
+        @JsonAlias("Plot") String sinopsis,
+        @JsonAlias("Poster") String poster
+
+        ) {
 }

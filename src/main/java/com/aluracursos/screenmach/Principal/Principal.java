@@ -1,9 +1,7 @@
 package com.aluracursos.screenmach.Principal;
 
-import com.aluracursos.screenmach.model.DatosEpisodio;
-import com.aluracursos.screenmach.model.DatosSerie;
-import com.aluracursos.screenmach.model.DatosTemporada;
-import com.aluracursos.screenmach.model.Episodio;
+import com.aluracursos.screenmach.model.*;
+import com.aluracursos.screenmach.repository.ISerieRepository;
 import com.aluracursos.screenmach.service.ConsumoAPI;
 import com.aluracursos.screenmach.service.ConvierteDato;
 
@@ -18,9 +16,113 @@ public class Principal {
     private Scanner leer = new Scanner(System.in);
     private ConsumoAPI consumoApi = new ConsumoAPI();
     private final String URL_BASE = "http://www.omdbapi.com/?t=";
-    private final String KEY = "&apikey=2ca7e64c";
+    private final String KEY = System.getenv("KEY_API");
 
     private ConvierteDato conversor = new ConvierteDato();
+
+    private List<DatosSerie> datosSeries = new ArrayList<>();
+    private ISerieRepository serieRepository;
+
+    List<Serie> series = new ArrayList<>();
+    public  Principal(ISerieRepository serieRepository){
+        this.serieRepository = serieRepository;
+    }
+    public void mostrarMenuPrincipal(){
+        int opcion = -1;
+        System.out.println("********* Bienvenido a PelisMax ********");
+        var menu = """
+                    
+                    
+                    1- Buscar serie
+                    2- Buscar episodios
+                    3- Mostrar información
+                    0- salir
+                """;
+        while(opcion != 0){
+            System.out.println(menu);
+            System.out.println("ingrese una opcion: ");
+            opcion = leer.nextInt();
+            leer.nextLine();
+            switch (opcion){
+                case 1:
+                    buscarSerieWeb();
+                    break;
+                case 2:
+                    buscarEpisodioPorSerie();
+                    break;
+                case 3:
+                    mostrarEpisodios();
+                    break;
+            }
+        }
+    }
+
+    private DatosSerie getDatosSerie(){
+        System.out.println("Ingrese el nombre de la serie: ");
+        String nombreSerie = leer.nextLine();
+        var json = consumoApi.obtenerDatos(URL_BASE+nombreSerie.replace(" ","+")+KEY);
+        System.out.println(json);
+        DatosSerie datosSerie = conversor.obtenerDatos(json, DatosSerie.class);
+        datosSeries.add(datosSerie);
+        return datosSerie;
+    }
+
+    private void buscarEpisodioPorSerie(){
+        /*DatosSerie datosSerie = getDatosSerie();
+        List<DatosTemporada> temporadas = new ArrayList<>();
+
+        for(int i=1; i < datosSerie.totalDeTemporadas(); i++){
+            var json = consumoApi.obtenerDatos(URL_BASE+datosSerie.titulo().replace(" ","+")+"&season="+i+KEY);
+            DatosTemporada datosTemporada = conversor.obtenerDatos(json,DatosTemporada.class);
+            temporadas.add(datosTemporada);
+        }
+        temporadas.forEach(System.out::println);*/
+        mostrarEpisodios();
+        System.out.println("Ingrese el nombre de la serie: ");
+        var nombreSerie = leer.nextLine();
+
+        Optional<Serie> serie = series.stream()
+                .filter(s -> s.getTitulo().toLowerCase().contains(nombreSerie.toLowerCase()))
+                .findFirst();
+        if(serie.isPresent()){
+            var serieEncontrada = serie.get();
+            List<DatosTemporada> temporadas = new ArrayList<>();
+
+            for(int i=1; i < serieEncontrada.getTotalDeTemporadas(); i++){
+                var json = consumoApi.obtenerDatos(URL_BASE+serieEncontrada.getTitulo().replace(" ","+")+"&season="+i+KEY);
+                DatosTemporada datosTemporada = conversor.obtenerDatos(json,DatosTemporada.class);
+                temporadas.add(datosTemporada);
+            }
+            //convertimos la lista de temporadas en lista de Episodios
+            List<Episodio> episodios = temporadas.stream()
+                    .flatMap(d -> d.episodios().stream()
+                            .map(e -> new Episodio(d.numeroTemporada(),e)))
+                    .collect(Collectors.toList());
+            serieEncontrada.setEpisodios(episodios);
+            serieRepository.save(serieEncontrada);
+
+        }
+
+    }
+    private void buscarSerieWeb(){
+        DatosSerie datos = getDatosSerie();
+        Serie serie = new Serie(datos);
+        serieRepository.save(serie);
+        System.out.println(datos);
+    }
+    private void mostrarEpisodios(){
+        /*List<Serie> series = new ArrayList<>();
+        series = datosSeries.stream()
+                .map(s -> new Serie(s))
+                .collect(Collectors.toList());*/
+        //traemos los datos con JPArepository
+        series = serieRepository.findAll();
+
+        series.stream()
+                .sorted(Comparator.comparing(Serie::getGenero))
+                .forEach(System.out::println);
+
+    }
     public void mostrarMenu(){
         System.out.println("Ingrese el nombre de la serie que desea buscar: ");
         //Busca los datos generales de la serie

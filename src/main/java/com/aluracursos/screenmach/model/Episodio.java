@@ -1,14 +1,40 @@
 package com.aluracursos.screenmach.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-
+@Entity
+@Table(name="episodios")
 public class Episodio {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_episodio", nullable = false)
+    private Long id_episodio;
+
     private Integer temporada;
     private String titulo;
     private Integer numeroEpisodio;
     private Double evaluacion;
     private LocalDate fechaDeLanzamiento;
+    @ManyToOne
+    private Serie serie;
+
+    public Serie getSerie() {
+        return serie;
+    }
+
+    public void setSerie(Serie serie) {
+        this.serie = serie;
+    }
+
+    public Episodio() {
+    }
+
+    public Long getId_episodio() {
+        return id_episodio;
+    }
+
 
     public Episodio(Integer temporada, DatosEpisodio d){
         this.temporada = temporada;
