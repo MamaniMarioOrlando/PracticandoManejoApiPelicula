@@ -36,6 +36,10 @@ public class Principal {
                     1- Buscar serie
                     2- Buscar episodios
                     3- Mostrar información
+                    4- Buscar por titulo
+                    5- Top 5 mejores series
+                    6- Buscar por categoria
+                    7- filtrar serie
                     0- salir
                 """;
         while(opcion != 0){
@@ -53,6 +57,23 @@ public class Principal {
                 case 3:
                     mostrarEpisodios();
                     break;
+                case 4:
+                    buscarSeriePorTitulo();
+                    break;
+                case 5:
+                    mostrarTop5MejoresSeries();
+                    break;
+                case 6:
+                    buscarSeriesPorCategoria();
+                    break;
+                case 7:
+                    filtrarSeriePorTemporadaYEvaluacion();
+                    break;
+                case 0:
+                    System.out.println("Cerrando la aplicación...");
+                    break;
+                default:
+                    System.out.println("Opción inválida");
             }
         }
     }
@@ -121,6 +142,44 @@ public class Principal {
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
+
+    }
+    private void buscarSeriePorTitulo(){
+        System.out.println("Ingrese el titulo de la serie: ");
+        var nombreSerie = leer.nextLine();
+
+        Optional<Serie> serieEncontrada = serieRepository.findByTituloContainsIgnoreCase(nombreSerie);
+
+        if(serieEncontrada.isPresent()){
+            System.out.println("La serie encontrada es: "+ serieEncontrada.get());
+        }else{
+            System.out.println("No se encontro la serie de monbre "+ nombreSerie);
+        }
+    }
+    private void mostrarTop5MejoresSeries(){
+        List<Serie> lasMejoresSeies = serieRepository.findTop5ByOrderByEvaluacionDesc();
+
+        lasMejoresSeies.forEach(s -> System.out.println("Serie: "+s.getTitulo() + "Evaluación: "+s.getEvaluacion()));
+    }
+    private void buscarSeriesPorCategoria(){
+        System.out.println("Ingrese el nombre del genero: ");
+        var nombreGenero = leer.nextLine();
+        var categoria = Categoria.fromEspaniol(nombreGenero);
+
+        List<Serie> seriesPorCategoria = serieRepository.findByGenero(categoria);
+        seriesPorCategoria.forEach(System.out::println);
+
+    }
+    private void filtrarSeriePorTemporadaYEvaluacion(){
+        System.out.println("¿filtrar series con cuantas temporadas?");
+        var totalTemporadas = leer.nextInt();
+        leer.nextLine();
+        System.out.println("¿Con evaluacion a partir de que valor?");
+        var evaluacion = leer.nextDouble();
+
+        List<Serie> filtroSeries = serieRepository.findByTotalDeTemporadasLessThanEqualAndEvaluacionGreaterThanEqual(totalTemporadas,evaluacion);
+        System.out.println("++++++ Series filtradas ++++++");
+        filtroSeries.forEach(s -> System.out.println("Titulo: "+s.getTitulo()+ "  Evaluacion: " + s.getEvaluacion()));
 
     }
     public void mostrarMenu(){
