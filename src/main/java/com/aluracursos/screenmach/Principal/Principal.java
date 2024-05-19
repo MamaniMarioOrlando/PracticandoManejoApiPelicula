@@ -24,6 +24,7 @@ public class Principal {
     private ISerieRepository serieRepository;
 
     List<Serie> series = new ArrayList<>();
+    private Optional<Serie> serieEncontrada;
     public  Principal(ISerieRepository serieRepository){
         this.serieRepository = serieRepository;
     }
@@ -40,6 +41,8 @@ public class Principal {
                     5- Top 5 mejores series
                     6- Buscar por categoria
                     7- filtrar serie
+                    8- Buscar Episodio por titulo
+                    9- top5 mejores episodios
                     0- salir
                 """;
         while(opcion != 0){
@@ -68,6 +71,12 @@ public class Principal {
                     break;
                 case 7:
                     filtrarSeriePorTemporadaYEvaluacion();
+                    break;
+                case 8:
+                    consultaEpisodioPorTitulo();
+                    break;
+                case 9:
+                    top5mejoresEpisodios();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -148,7 +157,7 @@ public class Principal {
         System.out.println("Ingrese el titulo de la serie: ");
         var nombreSerie = leer.nextLine();
 
-        Optional<Serie> serieEncontrada = serieRepository.findByTituloContainsIgnoreCase(nombreSerie);
+        serieEncontrada = serieRepository.findByTituloContainsIgnoreCase(nombreSerie);
 
         if(serieEncontrada.isPresent()){
             System.out.println("La serie encontrada es: "+ serieEncontrada.get());
@@ -177,10 +186,27 @@ public class Principal {
         System.out.println("¿Con evaluacion a partir de que valor?");
         var evaluacion = leer.nextDouble();
 
-        List<Serie> filtroSeries = serieRepository.findByTotalDeTemporadasLessThanEqualAndEvaluacionGreaterThanEqual(totalTemporadas,evaluacion);
+        List<Serie> filtroSeries = serieRepository.buscarPorTemporadaYEvaluacion(totalTemporadas,evaluacion);
         System.out.println("++++++ Series filtradas ++++++");
         filtroSeries.forEach(s -> System.out.println("Titulo: "+s.getTitulo()+ "  Evaluacion: " + s.getEvaluacion()));
-
+    }
+    private void consultaEpisodioPorTitulo(){
+        System.out.println("Ingrese el titulo del Episodio: ");
+        var tituloEpisodio = leer.nextLine();
+        List<Episodio> episodios = serieRepository.episodioPorTitulo(tituloEpisodio);
+        episodios.forEach(e -> System.out.printf("Serie: %s Temporada: %s Episodio: %s Evaluacion: %s",
+                e.getSerie().getTitulo(), e.getTemporada(), e.getNumeroEpisodio(), e.getEvaluacion()));
+        System.out.println("");
+    }
+    private void top5mejoresEpisodios(){
+        buscarSeriePorTitulo();
+        if(serieEncontrada.isPresent()){
+            Serie serie = serieEncontrada.get();
+            List<Episodio> mejoresEpisodios = serieRepository.top5MejoresEpisodios(serie);
+            mejoresEpisodios.forEach(e -> System.out.printf("Serie: %s Temporada: %s titulo: %s Evaluacion: %s \n",
+                    e.getSerie().getTitulo(), e.getTemporada(), e.getTitulo(), e.getEvaluacion()));
+            System.out.println("");
+        }
     }
     public void mostrarMenu(){
         System.out.println("Ingrese el nombre de la serie que desea buscar: ");
